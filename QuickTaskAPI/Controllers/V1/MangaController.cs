@@ -16,16 +16,16 @@ public class MangaController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var mangas = _mangaService.GetAll();
+        var mangas = await _mangaService.GetAll();
         return Ok(mangas);
     }
 
     [HttpGet("{id:int}")]
-    public IActionResult GetById([FromRoute] int id)
+    public async Task<IActionResult> GetById([FromRoute] int id)
     {
-        var manga = _mangaService.GetById(id);
+        var manga = await _mangaService.GetById(id);
         if (manga == null)
         {
             return NotFound(new { Message = $"Manga con ID {id} no encontrado." });
@@ -34,18 +34,18 @@ public class MangaController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Add([FromBody] Manga manga)
+    public async Task<IActionResult> Add([FromBody] Manga manga)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        var newManga = _mangaService.Add(manga);
+        var newManga = await _mangaService.Add(manga);
         return CreatedAtAction(nameof(GetById), new { id = newManga.Id }, newManga);
     }
 
     [HttpPut("{id:int}")]
-    public IActionResult Update([FromRoute] int id, [FromBody] Manga mangaToUpdate)
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] Manga mangaToUpdate)
     {
         if (id != mangaToUpdate.Id)
         {
@@ -56,7 +56,7 @@ public class MangaController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var success = _mangaService.Update(mangaToUpdate);
+        var success = await _mangaService.Update(mangaToUpdate);
         if (!success)
         {
             return NotFound(new { Message = $"Manga con ID {id} no encontrado para actualizar." });
@@ -65,9 +65,9 @@ public class MangaController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public IActionResult Delete([FromRoute] int id)
+    public async Task<IActionResult> Delete([FromRoute] int id)
     {
-        var success = _mangaService.Delete(id);
+        var success = await _mangaService.Delete(id);
         if (!success)
         {
             return NotFound(new { Message = $"Manga con ID {id} no encontrado para eliminar." });

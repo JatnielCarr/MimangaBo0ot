@@ -1,77 +1,54 @@
+using Microsoft.EntityFrameworkCore;
+using QuickTaskAPI.Domain.Data;
 using QuickTaskAPI.Domain.Entities;
 
 namespace QuickTaskAPI.Services.Features.Mangas;
 
 public class MangaService
 {
-    private readonly List<Manga> _mangas;
-    private int _nextId = 1;
+    private readonly ApplicationDbContext _context;
 
-    public MangaService()
+    public MangaService(ApplicationDbContext context)
     {
-        _mangas = new List<Manga>();
-        // Datos de ejemplo
-        Add(new Manga 
-        { 
-            Title = "Naruto", 
-            Author = "Masashi Kishimoto", 
-            PublicationDate = new DateTime(1999, 9, 21), 
-            Volumes = 72, 
-            IsOngoing = false, 
-            Genre = "Shonen" 
-        });
-        Add(new Manga 
-        { 
-            Title = "One Piece", 
-            Author = "Eiichiro Oda", 
-            PublicationDate = new DateTime(1997, 7, 22), 
-            Volumes = 100, 
-            IsOngoing = true, 
-            Genre = "Shonen" 
-        });
+        _context = context;
     }
 
-    public IEnumerable<Manga> GetAll()
+    public async Task<IEnumerable<Manga>> GetAll()
     {
-        return _mangas;
+        return await _context.Mangas.ToListAsync();
     }
 
-    public Manga? GetById(int id)
+    public async Task<Manga?> GetById(int id)
     {
-        return _mangas.FirstOrDefault(manga => manga.Id == id);
+        return await _context.Mangas.FindAsync(id);
     }
 
-    public Manga Add(Manga manga)
+    public async Task<Manga> Add(Manga manga)
     {
-        manga.Id = _nextId++;
-        _mangas.Add(manga);
+        _context.Mangas.Add(manga);
+        await _context.SaveChangesAsync();
         return manga;
     }
 
-    public bool Update(Manga mangaToUpdate)
+    public async Task<bool> Update(Manga mangaToUpdate)
     {
-        var existingManga = _mangas.FirstOrDefault(m => m.Id == mangaToUpdate.Id);
-        if (existingManga != null)
-        {
-            existingManga.Title = mangaToUpdate.Title;
-            existingManga.Author = mangaToUpdate.Author;
-            existingManga.Genre = mangaToUpdate.Genre;
-            existingManga.PublicationDate = mangaToUpdate.PublicationDate;
-            existingManga.Volumes = mangaToUpdate.Volumes;
-            existingManga.IsOngoing = mangaToUpdate.IsOngoing;
-            return true;
-        }
-        return false;
+        var existingManga = await _context.Mangas.FindAsync(mangaToUpdate.Id);
+        if (existingManga == null)
+            return false;
+
+        _context.Entry(existingManga).CurrentValues.SetValues(mangaToUpdate);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
-    public bool Delete(int id)
+    public async Task<bool> Delete(int id)
     {
-        var mangaToRemove = _mangas.FirstOrDefault(manga => manga.Id == id);
-        if (mangaToRemove != null)
-        {
-            _mangas.Remove(mangaToRemove);
-            return true;
-        }
-        return false;
+        var manga = await _context.Mangas.FindAsync(id);
+        if (manga == null)
+            return false;
+
+        _context.Mangas.Remove(manga);
+        await _context.SaveChangesAsync();
+        return true;
     }
 } 

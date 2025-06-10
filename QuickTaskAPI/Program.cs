@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using QuickTaskAPI.Domain.Data;
 using QuickTaskAPI.Services.Features.Mangas;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +22,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Registrar nuestro servicio como Singleton para mantener los datos en memoria
-builder.Services.AddSingleton<MangaService>();
+// Configurar la base de datos
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// Registrar el servicio
+builder.Services.AddScoped<MangaService>();
 
 var app = builder.Build();
 
@@ -32,12 +39,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "MangaBot API V1");
-        options.RoutePrefix = string.Empty; // Para que Swagger UI esté en la raíz
+        options.RoutePrefix = string.Empty;
     });
 }
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+// Asegurarse de que la base de datos existe
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.Run();
