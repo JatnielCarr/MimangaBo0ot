@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using QuickTaskAPI.Domain.Data;
 using QuickTaskAPI.Services.Features.Mangas;
+using QuickTaskAPI.Database;
+using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,10 +24,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Configurar Supabase
+var supabaseConfig = SupabaseConfig.FromConfiguration(builder.Configuration);
+builder.Services.AddSingleton(new Client(supabaseConfig.Url, supabaseConfig.Key));
+
 // Configurar la base de datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseNpgsql(connectionString));
 
 // Registrar el servicio
 builder.Services.AddScoped<MangaService>();
