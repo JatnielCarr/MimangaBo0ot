@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using QuickTaskAPI.Domain.Data;
 using QuickTaskAPI.Services.Features.Mangas;
+using QuickTaskAPI.Services.Features.Genres;
 using QuickTaskAPI.Database;
+using QuickTaskAPI.Domain.Repositories;
 using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,8 +35,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Registrar el servicio
+// Registrar repositorios
+builder.Services.AddScoped<IMangaRepository, MangaRepository>();
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+
+// Registrar servicios
 builder.Services.AddScoped<MangaService>();
+builder.Services.AddScoped<GenreService>();
 
 var app = builder.Build();
 

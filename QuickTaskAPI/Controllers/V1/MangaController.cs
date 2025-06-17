@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QuickTaskAPI.Domain.Entities;
 using QuickTaskAPI.Services.Features.Mangas;
+using QuickTaskAPI.Domain.Models;
 
 namespace QuickTaskAPI.Controllers.V1;
 
@@ -22,6 +23,15 @@ public class MangaController : ControllerBase
         return Ok(mangas);
     }
 
+    [HttpGet("paginated")]
+    public async Task<IActionResult> GetPaginated(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var paginatedResult = await _mangaService.GetPaginated(pageNumber, pageSize);
+        return Ok(paginatedResult);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
@@ -34,29 +44,25 @@ public class MangaController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] Manga manga)
+    public async Task<IActionResult> Add([FromBody] CreateMangaDto createDto)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        var newManga = await _mangaService.Add(manga);
+        var newManga = await _mangaService.Add(createDto);
         return CreatedAtAction(nameof(GetById), new { id = newManga.Id }, newManga);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] Manga mangaToUpdate)
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] CreateMangaDto updateDto)
     {
-        if (id != mangaToUpdate.Id)
-        {
-            return BadRequest(new { Message = "El ID de la ruta no coincide con el ID del cuerpo." });
-        }
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var success = await _mangaService.Update(mangaToUpdate);
+        var success = await _mangaService.Update(id, updateDto);
         if (!success)
         {
             return NotFound(new { Message = $"Manga con ID {id} no encontrado para actualizar." });
@@ -74,4 +80,4 @@ public class MangaController : ControllerBase
         }
         return NoContent();
     }
-} 
+}
