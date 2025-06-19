@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QuickTaskAPI.Domain.Models;
 using QuickTaskAPI.Services.Features.Auth;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuickTaskAPI.Controllers.V1
 {
@@ -25,6 +26,13 @@ namespace QuickTaskAPI.Controllers.V1
                 return Ok(token);
             }
             return Unauthorized();
+        }
+
+        [HttpGet("validate")]
+        [Authorize]
+        public IActionResult ValidateToken()
+        {
+            return Ok(new { message = "Token válido", user = User.Identity.Name });
         }
     }
 }
