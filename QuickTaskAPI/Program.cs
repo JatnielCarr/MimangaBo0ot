@@ -76,6 +76,15 @@ builder.Services.AddScoped<GenreService>();
 
 builder.Services.AddScoped<JwtService>();
 
+// Agregar configuración de CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(options =>
 {
@@ -98,7 +107,9 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// === CONFIGURACIÓN DEL PIPELINE DE MIDDLEWARES ===
+
+// Swagger siempre habilitado
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -106,13 +117,20 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty;
 });
 
-// Redirigir a HTTPS solo si NO es producción
+// Redirigir a HTTPS solo si NO es producción (en Docker solo HTTP)
 if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+
+// Usar CORS antes de Authentication y Authorization
+app.UseCors("AllowAll");
+
+// Autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Mapear controladores
 app.MapControllers();
 
 // Asegurarse de que la base de datos existe
